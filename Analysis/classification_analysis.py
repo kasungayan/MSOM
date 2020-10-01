@@ -36,7 +36,7 @@ for k in K:
     kmeanModel.fit(shap_v1_cluster_group_attributes)
     distortions.append(kmeanModel.inertia_)
     
- plt.figure(figsize=(16,8))
+plt.figure(figsize=(16,8))
 plt.plot(K, distortions, 'bx-')
 plt.xlabel('k')
 plt.ylabel('Distortion')
