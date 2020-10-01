@@ -1,0 +1,2 @@
+Download the file required for cluster preprocessing (The preprocessed transaction dataset) from here:
+https://drive.google.com/file/d/1CbpkvoHXbaiAJQk96PQhpoh5u_4eiGrG/view?usp=sharing

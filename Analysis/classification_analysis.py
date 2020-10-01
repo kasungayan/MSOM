@@ -18,65 +18,13 @@ import pickle
 
 np.random.seed(123)
 
-shap_v1 = pd.read_feather('preprocessed_data/click_data_classification_correct2.ft')
-
-shap_v1_cluster = shap_v1[['skuID', 'skutable-attribute1', 'skutable-attribute2']]
-shap_v1_cluster_group_skuid = shap_v1_cluster_group['skuID']
-
-shap_v1_cluster_group_attributes = shap_v1_cluster_group[['skutable-attribute1', 'skutable-attribute2']]
-
-scaler = MinMaxScaler()
-
-shap_v1_cluster_group_attributes[['skutable-attribute1', 'skutable-attribute2']] = scaler.fit_transform(shap_v1_cluster_group_attributes[['skutable-attribute1', 'skutable-attribute2']])
-
-distortions = []
-K = range(1,10)
-for k in K:
-    kmeanModel = KMeans(n_clusters=k)
-    kmeanModel.fit(shap_v1_cluster_group_attributes)
-    distortions.append(kmeanModel.inertia_)
-    
-plt.figure(figsize=(16,8))
-plt.plot(K, distortions, 'bx-')
-plt.xlabel('k')
-plt.ylabel('Distortion')
-plt.title('The Elbow Method showing the optimal k')
-plt.show()
-
-kmeanModel = KMeans(n_clusters=4)
-kmeanModel.fit(shap_v1_cluster_group_attributes)
-
-shap_v1_cluster_group_attributes['class']=kmeanModel.predict(shap_v1_cluster_group_attributes)
-y_kmeans = shap_v1_cluster_group_attributes['class']
-y_kmeans = np.array(y_kmeans)
-
-
-X = shap_v1_cluster_group_attributes
-
-#6 Visualising the clusters
-plt.scatter(X.loc[y_kmeans==0, 'skutable-attribute1'], X.loc[y_kmeans==0, 'skutable-attribute2'], s=100, c='red', label ='Cluster 1')
-plt.scatter(X.loc[y_kmeans==1, 'skutable-attribute1'], X.loc[y_kmeans==1, 'skutable-attribute2'], s=100, c='blue', label ='Cluster 2')
-plt.scatter(X.loc[y_kmeans==2, 'skutable-attribute1'], X.loc[y_kmeans==2, 'skutable-attribute2'], s=100, c='green', label ='Cluster 3')
-plt.scatter(X.loc[y_kmeans==3, 'skutable-attribute1'], X.loc[y_kmeans==3, 'skutable-attribute2'], s=100, c='cyan', label ='Cluster 4')
-#plt.scatter(X.loc[y_kmeans==4, 'attribute1'], X.loc[y_kmeans==4, 'attribute2'], s=100, c='cyan', label ='Cluster 5')
-#Plot the centroid. This time we're going to use the cluster centres  #attribute that returns here the coordinates of the centroid.
-plt.scatter(kmeanModel.cluster_centers_[:, 0], kmeanModel.cluster_centers_[:, 1], s=300, c='yellow', label = 'Centroids')
-plt.title('Clusters of Products')
-plt.xlabel('Atrribute 1')
-plt.ylabel('Atrribute 2')
-plt.show()
-
-final_df = pd.concat([shap_v1_cluster_group_skuid, shap_v1_cluster_group_attributes], axis = 1)
-
-shap_v1['skuID'] = shap_v1['skuID'].astype(str)
-final_df['skuID'] = final_df['skuID'].astype(str)
-
-df_final_joined = shap_v1.merge(final_df, on = "skuID", how = "right")
+df_final_joined = pd.read_feather('Preprocessed_data/click_data_classification_correct_approach1.ft')
 
 shap_v1_filter = df_final_joined.copy()
 shap_v1_filter['class'] = shap_v1_filter['class'].astype('int8')
 
-shap_v1_filter = shap_v1_filter.drop(columns = ['skuID','skutable-attribute1', 'skutable-attribute2','quantity'])
+shap_v1_filter = shap_v1_filter.drop(columns = ['sku_ID','skutable-attribute1', 'skutable-attribute2','quantity', 'attribute1',
+                                               'attribute2'])
 
 shap_v1 = shap_v1_filter.copy()
 
@@ -131,19 +79,18 @@ params = {
     'bagging_fraction': 0.8,
     'bagging_freq': 5,
     'verbose': 1,
-    'seed': 8
+    'seed': 8,
 }
 
-
-random_state = 7
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size= 0.1, random_state=random_state)
+random_state = 5
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.1, random_state=random_state)
 d_train = lgb.Dataset(X_train, label=y_train)
 d_test = lgb.Dataset(X_test, label=y_test)
 
 model = lgb.train(params, d_train, valid_sets=[d_test], early_stopping_rounds=50)
 y_pred = model.predict(X_test)
 
-filename = 'finalized_correct_classification.sav'
+filename = 'finalized_approach1_classification.sav'
 pickle.dump(model, open(filename, 'wb'))
 
 # load the model from disk
@@ -224,16 +171,16 @@ plt.savefig("class2_classification_latest.png",bbox_inches='tight')
 shap.decision_plot(explainer.expected_value[1], shap_values[1][16,:], X_test_disp.iloc[16,:], link="logit")
 
 class0 = ['ordertable-original_unit_price', 'percentage_direct_discount_per_unit', 'product_type',
-         'percentage_quantity_discount_per_unit', 'promise', 'number_of_gifts', 'percentage_coupon_discount_per_unit']
+         'percentage_quantity_discount_per_unit', 'promise', 'percentage_bundle_discount_per_unit', 'percentage_coupon_discount_per_unit']
          
 class1 = ['ordertable-original_unit_price', 'percentage_direct_discount_per_unit', 'product_type',
-         'percentage_quantity_discount_per_unit', 'promise', 'channel', 'percentage_bundle_discount_per_unit']
+         'percentage_quantity_discount_per_unit', 'promise', 'number_of_gifts', 'day_of_week']
          
 class2 = ['ordertable-original_unit_price', 'percentage_direct_discount_per_unit', 'product_type',
-         'education', 'promise', 'percentage_coupon_discount_per_unit', 'percentage_quantity_discount_per_unit']
+         'channel', 'percentage_bundle_discount_per_unit', 'percentage_coupon_discount_per_unit', 'percentage_quantity_discount_per_unit']
          
 class3 = ['ordertable-original_unit_price', 'percentage_direct_discount_per_unit', 'product_type',
-         'percentage_bundle_discount_per_unit', 'promise', 'percentage_coupon_discount_per_unit', 'percentage_quantity_discount_per_unit']
+         'promise', 'education', 'percentage_coupon_discount_per_unit', 'percentage_quantity_discount_per_unit']
 
 plt.clf()
 

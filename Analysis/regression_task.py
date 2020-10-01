@@ -14,7 +14,7 @@ from sklearn import linear_model
 
 np.random.seed(123)
 
-shap_v1 = pd.read_feather('preprocessed_data/click_data_shap_final_version.ft')
+shap_v1 = pd.read_feather('Preprocessed_data/click_data_shap_final_version.ft')
 
 shap_v1['percentage_direct_discount_per_unit'] = shap_v1['ordertable-direct_discount_per_unit']/shap_v1['ordertable-original_unit_price']
 shap_v1['percentage_quantity_discount_per_unit'] = shap_v1['ordertable-quantity_discount_per_unit']/shap_v1['ordertable-original_unit_price']
